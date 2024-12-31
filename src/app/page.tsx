@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { db, collection, addDoc } from "@/lib/firebase"; 
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -8,25 +9,25 @@ export default function Home() {
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault();
     if (!username.trim()) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/grok", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: `Analyze Twitter user: ${username}` }),
+      // Save the Twitter username to Firestore
+      await addDoc(collection(db, "twitterUsernames"), {
+        username: username.trim(),
+        createdAt: new Date(),
       });
 
-      
+     
+
+      setUsername(""); 
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error saving username:", error);
     } finally {
       setIsLoading(false);
-      router.push(`/decision`);
+      router.push(`/decision?username=${encodeURIComponent(username.trim())}`);
     }
   };
 
