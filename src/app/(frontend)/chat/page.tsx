@@ -1,24 +1,30 @@
-"use client"
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { db, collection, query, where, getDocs } from "@/lib/firebase";
 
 const fetchBotResponse = async (message: string) => {
-  return new Promise<string>((resolve) =>
-    setTimeout(() => {
-      resolve(`Bot response to: ${message}`);
-    }, 1000)
-  );
-};
+  try {
+    const response = await fetch("/api/grok", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message }), // Send the user's message
+    });
 
-const fetchUserProfile = async (username: string) => {
-  return new Promise<{ username: string; avatarUrl: string }>((resolve) =>
-    setTimeout(() => {
-      resolve({
-        username: username,
-        avatarUrl: `/api/placeholder/64/64`,
-      });
-    }, 1000)
-  );
+    if (!response.ok) {
+      throw new Error("Failed to fetch bot response");
+    }
+
+    const data = await response.json(); 
+    
+    return data.message || "Sorry, I couldn't understand that.";
+  } catch (error) {
+    console.error("Error fetching bot response:", error);
+    return "Sorry, there was an error.";
+  }
 };
 
 function Chat() {
@@ -32,9 +38,25 @@ function Chat() {
 
   useEffect(() => {
     if (username) {
-      fetchUserProfile(username as string).then((profile) => {
-        setUserProfile(profile);
-      });
+      const fetchUserProfile = async () => {
+        try {
+          const userQuery = query(
+            collection(db, "twitterUsernames"),
+            where("username", "==", username)
+          );
+          const querySnapshot = await getDocs(userQuery);
+          if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            setUserProfile(userData);
+          } else {
+            console.error("User not found in database.");
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      };
+
+      fetchUserProfile();
     }
   }, [username]);
 
@@ -47,9 +69,14 @@ function Chat() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
+      // Send the user message
       setMessages((prevMessages) => [...prevMessages, message]);
       setMessage("");
+      
+      // Get the bot's reply from /api/grok
       const botReply = await fetchBotResponse(message);
+      
+      // Add bot's response to messages
       setMessages((prevMessages) => [...prevMessages, botReply]);
     }
   };
@@ -64,11 +91,13 @@ function Chat() {
         {userProfile && (
           <div className="flex items-center gap-4 p-3 bg-zinc-900 rounded border border-zinc-800">
             <img
-              src={userProfile.avatarUrl}
+              src={userProfile.profileImageUrl || "/api/placeholder/64/64"}
               alt={userProfile.username}
               className="w-12 h-12 rounded-full border border-zinc-700"
             />
-            <div className="text-lg text-zinc-300 font-light">{userProfile.username}</div>
+            <div className="text-lg text-zinc-300 font-light">
+              {userProfile.username}
+            </div>
           </div>
         )}
 
@@ -79,8 +108,8 @@ function Chat() {
               className={`flex ${idx % 2 === 0 ? "justify-end" : "justify-start"} space-x-3`}
             >
               <div className={`max-w-xs p-3 rounded ${
-                idx % 2 === 0 
-                  ? "bg-zinc-800 text-zinc-200" 
+                idx % 2 === 0
+                  ? "bg-zinc-800 text-zinc-200"
                   : "bg-zinc-700 text-zinc-200"
               }`}>
                 {msg}

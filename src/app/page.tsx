@@ -1,7 +1,9 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { db, collection, addDoc } from "@/lib/firebase"; 
+import { db, collection, addDoc } from "@/lib/firebase";
+import axios from "axios";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -11,18 +13,22 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
-
     setIsLoading(true);
     try {
-      // Save the Twitter username to Firestore
+      // Fetch user data from the Twitter API
+      const response = await axios.get(`/api/twitter?username=${username}`);
+      const { username: fetchedUsername, profile_image_url, followers_count, tweet_count } = response.data;
+  
+      // Save the fetched data to Firestore
       await addDoc(collection(db, "twitterUsernames"), {
-        username: username.trim(),
+        username: fetchedUsername.trim(),
+        profileImageUrl: profile_image_url,
+        followersCount: followers_count,
+        tweetCount: tweet_count,
         createdAt: new Date(),
       });
-
-     
-
-      setUsername(""); 
+  
+      setUsername("");
     } catch (error) {
       console.error("Error saving username:", error);
     } finally {
@@ -30,14 +36,17 @@ export default function Home() {
       router.push(`/decision?username=${encodeURIComponent(username.trim())}`);
     }
   };
+  
+  
 
   return (
-    <div className="min-h-screen text-gray-100 flex flex-col justify-center items-center p-4">
-      <div className="bg-neutral-900 rounded-lg shadow-2xl p-8 w-full max-w-md space-y-6">
-        <h1 className="text-3xl font-bold text-center text-gray-100 mb-2">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4  font-mono">
+      <div className="w-full max-w-md bg-zinc-900 rounded-lg p-6 space-y-6 border border-zinc-800">
+        <h1 className="text-2xl font-light text-zinc-200 text-center">
           Chat with 𝕏
         </h1>
-        <p className="text-gray-400 text-center mb-6">
+        
+        <p className="text-zinc-400 text-center text-sm">
           Enter a Twitter username to create your own ChatBot
         </p>
 
@@ -48,10 +57,10 @@ export default function Home() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter Twitter username"
-              className="w-full px-4 py-3 rounded-lg border border-stone-700 focus:ring-2 focus:ring-stone-500 focus:border-transparent outline-none transition duration-200 bg-neutral-800 text-gray-100 placeholder-gray-400"
+              className="w-full px-4 py-2 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
             />
             {username && (
-              <span className="absolute right-3 top-3 text-gray-500">
+              <span className="absolute right-3 top-2 text-zinc-500">
                 @{username}
               </span>
             )}
@@ -60,10 +69,10 @@ export default function Home() {
           <button
             type="submit"
             disabled={isLoading || !username.trim()}
-            className="w-full bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center space-x-2"
+            className="w-full px-4 py-2 bg-zinc-800 text-zinc-200 rounded hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed border border-zinc-700"
           >
             {isLoading ? (
-              <div className="w-6 h-6 border-t-2 border-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-t border-zinc-200 rounded-full animate-spin mx-auto" />
             ) : (
               "Create ChatBot"
             )}
