@@ -4,22 +4,22 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { db, collection, query, where, getDocs } from "@/lib/firebase";
 
-const fetchBotResponse = async (message: string) => {
+const fetchBotResponse = async (message: string, username: string | null) => {
   try {
     const response = await fetch("/api/grok", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message }), // Send the user's message
+      body: JSON.stringify({ message, username }), // Send the user's message and username
     });
 
     if (!response.ok) {
       throw new Error("Failed to fetch bot response");
     }
 
-    const data = await response.json(); 
-    
+    const data = await response.json();
+
     return data.message || "Sorry, I couldn't understand that.";
   } catch (error) {
     console.error("Error fetching bot response:", error);
@@ -72,10 +72,10 @@ function Chat() {
       // Send the user message
       setMessages((prevMessages) => [...prevMessages, message]);
       setMessage("");
-      
-      // Get the bot's reply from /api/grok
-      const botReply = await fetchBotResponse(message);
-      
+
+      // Get the bot's reply from /api/grok, including the username
+      const botReply = await fetchBotResponse(message, username);
+
       // Add bot's response to messages
       setMessages((prevMessages) => [...prevMessages, botReply]);
     }
@@ -107,11 +107,13 @@ function Chat() {
               key={idx}
               className={`flex ${idx % 2 === 0 ? "justify-end" : "justify-start"} space-x-3`}
             >
-              <div className={`max-w-xs p-3 rounded ${
-                idx % 2 === 0
-                  ? "bg-zinc-800 text-zinc-200"
-                  : "bg-zinc-700 text-zinc-200"
-              }`}>
+              <div
+                className={`max-w-xs p-3 rounded ${
+                  idx % 2 === 0
+                    ? "bg-zinc-800 text-zinc-200"
+                    : "bg-zinc-700 text-zinc-200"
+                }`}
+              >
                 {msg}
               </div>
             </div>
