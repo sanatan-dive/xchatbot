@@ -34,6 +34,22 @@ interface TwitterResponse {
   };
 }
 
+interface UserData {
+  name: string;
+  username: string;
+  profile_image_url: string;
+  description: string;
+  followers_count: number;
+  following_count: number;
+  tweet_count: number;
+  profile_banner_url: string;
+  verified: boolean;
+  url: string;
+  location: string;
+  created_at: string;
+  user_id: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -46,8 +62,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch tweets with error handling
-    const tweets = await fetchTweets(username);
+    // Fetch user data and tweets
+    const [userData, tweets] = await Promise.all([
+      fetchUserData(username),
+      fetchTweets(username)
+    ]);
+
     if (!tweets.length) {
       return NextResponse.json(
         { error: 'No tweets found for this user' },
@@ -56,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate persona response
-    const response = await generatePersonaResponse(tweets, message);
+    const response = await generatePersonaResponse(tweets, message, userData);
     return NextResponse.json({ message: response });
   } catch (error) {
     console.error('Error in POST handler:', error);
@@ -67,46 +87,78 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function fetchTweets(username: string): Promise<string[]> {
-  try {
-    const response = await fetch(
-      `https://twitter-x.p.rapidapi.com/user/tweets?username=${encodeURIComponent(username)}&limit=100`,
-      {
-        method: 'GET',
-        headers: {
-          'x-rapidapi-host': 'twitter-x.p.rapidapi.com',
-          'x-rapidapi-key': rapidAPIKey || '',
-        } as HeadersInit,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Twitter API error: ${response.statusText}`);
+async function fetchUserData(username: string): Promise<UserData> {
+  const response = await fetch(
+    `https://twitter-api45.p.rapidapi.com/screenname.php?screenname=${username}`,
+    {
+      method: "GET",
+      headers: {
+        "x-rapidapi-host": "twitter-api45.p.rapidapi.com",
+        "x-rapidapi-key": rapidAPIKey || '',
+      },
     }
+  );
 
-    const data = (await response.json()) as TwitterResponse;
-    const instructions =
-      data?.data?.user?.result?.timeline_v2?.timeline?.instructions || [];
-    const entries =
-      instructions.find(
-        (inst: any) => inst.type === 'TimelineAddEntries'
-      )?.entries || [];
-
-    return entries
-      .map(
-        (entry: Tweet) =>
-          entry?.content?.itemContent?.tweet_results?.result?.legacy?.full_text
-      )
-      .filter((text: string | undefined): text is string => typeof text === 'string');
-  } catch (error) {
-    console.error('Error in fetchTweets:', error);
-    throw new Error('Failed to fetch tweets');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user data: ${response.statusText}`);
   }
+
+  const jsonResponse = await response.json();
+
+  return {
+    name: jsonResponse.name || '',
+    username: jsonResponse.profile || '',
+    profile_image_url: jsonResponse.avatar || '', 
+    description: jsonResponse.desc || '',
+    followers_count: jsonResponse.sub_count || 0,
+    following_count: jsonResponse.friends || 0,
+    tweet_count: jsonResponse.statuses_count || 0,
+    profile_banner_url: jsonResponse.header_image || '',
+    verified: jsonResponse.blue_verified || false,
+    url: jsonResponse.website || '',
+    location: jsonResponse.location || '',
+    created_at: jsonResponse.created_at || '',
+    user_id: jsonResponse.id || '',
+  };
+}
+
+async function fetchTweets(username: string): Promise<string[]> {
+  const response = await fetch(
+    `https://twitter-x.p.rapidapi.com/user/tweets?username=${encodeURIComponent(username)}&limit=100`,
+    {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'twitter-x.p.rapidapi.com',
+        'x-rapidapi-key': rapidAPIKey || '',
+      },
+    }
+  );
+
+ 
+  if (!response.ok) {
+    throw new Error(`Twitter API error: ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as TwitterResponse;
+  const instructions =
+    data?.data?.user?.result?.timeline_v2?.timeline?.instructions || [];
+  const entries =
+    instructions.find(
+      (inst: any) => inst.type === 'TimelineAddEntries'
+    )?.entries || [];
+
+  return entries
+    .map(
+      (entry: Tweet) =>
+        entry?.content?.itemContent?.tweet_results?.result?.legacy?.full_text
+    )
+    .filter((text: string | undefined): text is string => typeof text === 'string');
 }
 
 async function generatePersonaResponse(
   tweets: string[],
-  inputMessage: string
+  inputMessage: string,
+  userData: UserData
 ): Promise<string> {
   try {
     // Sanitize tweets and create a safer prompt
@@ -115,20 +167,30 @@ async function generatePersonaResponse(
       .join('\n')
       .slice(0, 5000); // Limit total content
 
-    const safePrompt = `
-Analyze these tweets and create a response to the following message that matches the writing style:
-Tweets for analysis: ${sanitizedTweets}
+    const safePrompt = `You are acting as ${userData.name} (@${userData.username}). Your task is to analyze their tweets and respond to a message in their authentic voice and style.
+
+Context:
+- Their recent tweets: ${sanitizedTweets}
+- Their bio: ${userData.description}
+- Their location: ${userData.location}
+- Account created: ${userData.created_at}
+- Follower count: ${userData.followers_count}
+- Following count: ${userData.following_count}
 
 Message to respond to: "${inputMessage}"
 
-Guidelines:
-- Keep response under 50 words
-- Match the general tone and vocabulary
-- Focus on natural, conversational language
-- Avoid sensitive topics
-- Maintain appropriate and professional content
+Response guidelines:
+1. Keep response under 50 words
+2. Match their vocabulary, tone, and typical response patterns
+3. If the message asks about something not evident in their tweets or profile:
+   - Provide a natural, generic response that aligns with their overall style
+   - Stay in character while being non-committal about specifics
+4. Maintain appropriate and professional content
+5. Focus on being conversational rather than formal
+6. Use a conversational tone
 
-Please provide only the response message.`;
+
+Important: Provide ONLY the response message, with very less explanations and nowwha meta-commentary.`;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     const chat = model.startChat({
