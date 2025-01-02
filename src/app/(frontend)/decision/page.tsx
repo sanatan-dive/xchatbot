@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { db, collection, query, where, getDocs } from "@/lib/firebase";
+import { motion } from "framer-motion";
 import profile from "../../../../public/profile.png";
 
 const Decision: React.FC = () => {
@@ -11,7 +12,7 @@ const Decision: React.FC = () => {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
 
- const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     if (username) {
@@ -48,26 +49,36 @@ const Decision: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center p-4 font-mono">
-      <div className="w-full max-w-2xl bg-zinc-900 rounded-lg p-6 space-y-8 border border-zinc-800">
+    <div className="min-h-screen flex justify-center items-center  text-white font- p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-2xl bg-gradient-to-b from-stone-950  to-stone-900 rounded-lg p-6 space-y-8 shadow-lg border border-stone-800"
+      >
         {/* Profile and Chat Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+        <motion.div
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="flex flex-col sm:flex-row items-center gap-6"
+        >
           <div className="flex sm:flex-row flex-col items-center gap-6 w-full">
             {/* Profile Section */}
             <div className="flex-1 flex justify-center">
               <div className="relative">
-                <div className="rounded-full overflow-hidden border border-zinc-700">
+                <div className="rounded-full overflow-hidden border-2 shadow-btn shadow-neutral-500 border-stone-700 shadow-md">
                   {userProfile ? (
                     <Image
                       src={userProfile.profileImageUrl}
                       alt={userProfile.username}
                       width={80}
                       height={80}
-                      className="hover:opacity-80 transition-opacity"
+                      className="hover:scale-110 transition-transform"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-zinc-700 rounded-full flex items-center justify-center">
-                      <span className="text-zinc-200">Loading...</span>
+                    <div className="w-20 h-20 bg-stone-700 rounded-full flex items-center justify-center">
+                      <span className="text-stone-400">Loading...</span>
                     </div>
                   )}
                 </div>
@@ -76,35 +87,42 @@ const Decision: React.FC = () => {
 
             {/* Button Section */}
             <div className="flex-1 flex justify-center">
-              <button
+              <motion.button
                 onClick={goToChat}
                 aria-label="Talk to Yourself"
                 disabled={!userProfile}
-                className={`w-full sm:w-auto px-6 py-2 bg-zinc-800 text-zinc-200 rounded hover:bg-zinc-700 border border-zinc-700 ${
-                  !userProfile ? "opacity-50 cursor-not-allowed" : ""
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md   drop-shadow-xl  hover:bg-stone-600 ${
+                  !userProfile ? "opacity-50  cursor-not-allowed" : ""
                 }`}
               >
                 Chat with {userProfile ? userProfile.username : "Loading..."}
-              </button>
+              </motion.button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="w-full h-px bg-zinc-800" />
+        <div className="w-full h-px bg-stone-700" />
 
         {/* Explore Others Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col sm:flex-row items-center gap-6"
+        >
           <div className="flex sm:flex-row flex-col items-center gap-6 w-full">
             {/* Profile Section */}
             <div className="flex-1 flex justify-center">
               <div className="relative">
-                <div className="rounded-full overflow-hidden border border-zinc-700">
+                <div className="rounded-full overflow-hidden border-2 shadow-btn shadow-neutral-500 border-stone-700 shadow-md">
                   <Image
                     src={profile}
                     alt="Other Profile"
                     width={80}
                     height={80}
-                    className="hover:opacity-80 transition-opacity"
+                    className="hover:scale-110 transition-transform"
                   />
                 </div>
               </div>
@@ -112,17 +130,19 @@ const Decision: React.FC = () => {
 
             {/* Button Section */}
             <div className="flex-1 flex justify-center">
-              <button
+              <motion.button
                 aria-label="Explore Profiles"
                 onClick={toOther}
-                className="w-full sm:w-auto px-6 py-2 bg-zinc-800 text-zinc-200 rounded hover:bg-zinc-700 border border-zinc-700"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md  shadow hover:bg-stone-600 drop-shadow-xl "
               >
                 Explore Profiles
-              </button>
+              </motion.button>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

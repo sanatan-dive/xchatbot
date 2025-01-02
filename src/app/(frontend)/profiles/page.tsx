@@ -55,9 +55,9 @@ function Profiles() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4  font-mono">
-      <div className="w-full max-w-4xl bg-zinc-900 rounded-lg p-6 space-y-6 border border-zinc-800">
-        <h1 className="text-2xl font-light text-zinc-200 text-center">
+    <div className="min-h-screen flex flex-col items-center p-4  ">
+      <div className="w-full max-w-4xl bg-gradient-to-b from-stone-950 to-stone-900  rounded-lg p-6 space-y-6 border border-stone-800">
+        <h1 className="text-2xl font-light text-stone-200 text-center">
           User Profiles
         </h1>
 
@@ -66,43 +66,43 @@ function Profiles() {
           value={searchQuery}
           onChange={handleSearch}
           placeholder="Search by username"
-          className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+          className="w-full px-4 py-2 bg-stone-800 border border-stone-700 rounded text-stone-200 placeholder-stone-500 focus:outline-none focus:border-stone-600"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filteredProfiles.map((profile) => (
             <div
               key={profile.id}
-              className="p-4 bg-zinc-800 rounded border border-zinc-700 space-y-4"
+              className="p-4 bg-stone-800 rounded border border-stone-700 space-y-4"
             >
               {profile.profileImageUrl ? (
                 <img
                   src={profile.profileImageUrl}
                   alt={profile.username}
-                  className="w-16 h-16 rounded-full mx-auto border border-zinc-700"
+                  className="w-16 h-16 rounded-full mx-auto border border-stone-700"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full mx-auto bg-zinc-700 flex items-center justify-center border border-zinc-600">
-                  <span className="text-2xl text-zinc-400">
+                <div className="w-16 h-16 rounded-full mx-auto bg-stone-700 flex items-center justify-center border border-stone-600">
+                  <span className="text-2xl text-stone-400">
                     {profile.username.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               
-              <h2 className="text-lg font-light text-center text-zinc-200">
+              <h2 className="text-lg font-light text-center text-stone-200">
                 @{profile.username}
               </h2>
               
               {(profile.followersCount !== undefined || profile.tweetCount !== undefined) && (
                 <div>
-                <p className="text-center text-sm text-zinc-400">
+                <p className="text-center text-sm text-stone-400">
                   {profile.followersCount !== undefined && `Followers: ${profile.followersCount}`}
                   {profile.followersCount !== undefined && profile.tweetCount !== undefined && " | "}
                   {profile.tweetCount !== undefined && `Tweets: ${profile.tweetCount}`}
                 </p>
-                <button className="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-zinc-200 hover:bg-zinc-700 focus:outline-none focus:border-zinc-600 mt-2 "
+                <button className="w-full px-4 py-2 bg-stone-800 border border-stone-700 rounded text-stone-200 hover:bg-stone-700 focus:outline-none focus:border-stone-600 mt-2 "
                 onClick={() => router.push(`/chat?username=${profile.username}`)}>
-                  <p className="text-center  text-sm text-zinc-400">
+                  <p className="text-center  text-sm text-stone">
                     Chat with @{profile.username}
                   </p>
                 </button>

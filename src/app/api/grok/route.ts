@@ -186,11 +186,14 @@ Response guidelines:
    - Provide a natural, generic response that aligns with their overall style
    - Stay in character while being non-committal about specifics
 4. Maintain appropriate and professional content
-5. Focus on being conversational rather than formal
-6. Use a conversational tone
+5. Try giving sarcastic answer or funny answer
+6. Make your responses more engaging
+7. Focus on being conversational rather than formal
+8. Use a conversational tone
+9. use special characters if you think it is appropriate
 
 
-Important: Provide ONLY the response message, with very less explanations and nowwha meta-commentary.`;
+Important: Provide ONLY the response message, with very less explanations and no meta-commentary.`;
 
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     const chat = model.startChat({
