@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { db, collection, query, where, getDocs } from "@/lib/firebase";
 import picture from "../../public/profile.png";
+import Image from "next/image";
 
 const fetchBotResponse = async (message: string, username: string | null) => {
   try {
@@ -22,7 +23,9 @@ const fetchBotResponse = async (message: string, username: string | null) => {
     const data = await response.json();
 
     return data.message || "Sorry, I couldn't understand that.";
-  } catch (error) {
+  } 
+  
+  catch (error) {
     console.error("Error fetching bot response:", error);
     return "Sorry, there was an error.";
   }
@@ -37,7 +40,6 @@ function Chat({ username }: ChatProps) {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [message, setMessage] = useState<string>("");
-  const [messageIsLoading, setMessageIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Reset messages when username changes
@@ -59,9 +61,12 @@ function Chat({ username }: ChatProps) {
             const userData = querySnapshot.docs[0].data();
             setUserProfile(userData);
           } else {
+            
             console.error("User not found in database.");
           }
-        } catch (error) {
+        }
+      
+        catch (error) {
           console.error("Error fetching user profile:", error);
         }
       };
@@ -96,7 +101,9 @@ function Chat({ username }: ChatProps) {
           newMessages[newMessages.length - 1] = botReply; // Replace the last message
           return newMessages;
         });
-      } catch (error) {
+      } 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      catch (error) {
         // Replace the loading message with an error message if something goes wrong
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages];
@@ -117,9 +124,11 @@ function Chat({ username }: ChatProps) {
 
         {userProfile && (
           <div className="flex items-center gap-4 p-3 bg-stone-950 rounded border border-stone-700">
-            <img
+            <Image
               src={userProfile.profileImageUrl || "/api/placeholder/64/64"}
               alt={userProfile.username}
+              width={64}
+              height={64}
               className="w-12 h-12 rounded-full border border-stone-600"
             />
             <div className="text-lg text-stone-300 font-light">
@@ -137,9 +146,11 @@ function Chat({ username }: ChatProps) {
       } space-x-2`}
     >
       {idx % 2 !== 0 && userProfile && ( // Bot message
-        <img
+        <Image
           src={userProfile.profileImageUrl || "/api/placeholder/40/40"}
           alt={userProfile.username}
+          width={40}
+          height={40}
           className="w-8 h-8 rounded-full self-end"
         />
       )}
@@ -153,9 +164,11 @@ function Chat({ username }: ChatProps) {
         {msg}
       </div>
       {idx % 2 === 0 && ( // User message
-        <img
+        <Image
           src={picture.src}  
           alt="User Avatar"
+          width={40}
+          height={40}
           className="w-8 h-8 rounded-full self-end"
         />
       )}

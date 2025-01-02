@@ -1,8 +1,9 @@
 import React from "react";
 
 import { cn } from "@/lib/utils";
-interface RainbowButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+interface RainbowButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export function RainbowButton({
   children,

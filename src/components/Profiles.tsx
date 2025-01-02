@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { db, collection, getDocs } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Profile {
   id: string;
@@ -29,7 +29,7 @@ function Profiles({ onProfileClick }: ProfilesProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
-  const router = useRouter();
+  
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -82,9 +82,11 @@ function Profiles({ onProfileClick }: ProfilesProps) {
                 className="p-4 bg-stone-800 rounded border border-stone-700 space-y-4"
               >
                 {profile.profileImageUrl ? (
-                  <img
+                  <Image
                     src={profile.profileImageUrl}
                     alt={profile.username}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full mx-auto border border-stone-700"
                   />
                 ) : (

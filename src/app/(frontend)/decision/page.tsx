@@ -1,17 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { db, collection, query, where, getDocs } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import profile from "../../../../public/profile.png";
 
-const Decision: React.FC = () => {
+// Separate component for the content that needs searchParams
+const DecisionContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
-
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -49,12 +49,12 @@ const Decision: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center  text-white font- p-4">
+    <div className="min-h-screen flex justify-center items-center text-white p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-2xl bg-gradient-to-b from-stone-950  to-stone-900 rounded-lg p-6 space-y-8 shadow-lg border border-stone-800"
+        className="w-full max-w-2xl bg-gradient-to-b from-stone-950 to-stone-900 rounded-lg p-6 space-y-8 shadow-lg border border-stone-800"
       >
         {/* Profile and Chat Section */}
         <motion.div
@@ -93,8 +93,8 @@ const Decision: React.FC = () => {
                 disabled={!userProfile}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={`w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md   drop-shadow-xl  hover:bg-stone-600 ${
-                  !userProfile ? "opacity-50  cursor-not-allowed" : ""
+                className={`w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md drop-shadow-xl hover:bg-stone-600 ${
+                  !userProfile ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
                 Chat with {userProfile ? userProfile.username : "Loading..."}
@@ -135,7 +135,7 @@ const Decision: React.FC = () => {
                 onClick={toOther}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md  shadow hover:bg-stone-600 drop-shadow-xl "
+                className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md shadow hover:bg-stone-600 drop-shadow-xl"
               >
                 Explore Profiles
               </motion.button>
@@ -144,6 +144,22 @@ const Decision: React.FC = () => {
         </motion.div>
       </motion.div>
     </div>
+  );
+};
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex justify-center items-center text-white">
+    <div className="text-xl">Loading...</div>
+  </div>
+);
+
+// Main component with Suspense boundary
+const Decision: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <DecisionContent />
+    </Suspense>
   );
 };
 
