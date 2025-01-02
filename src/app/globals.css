@@ -74,8 +74,55 @@ body {
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border;/* Add this to your global CSS */
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #57534e #292524;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #292524;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #57534e;
+      border-radius: 3px;
+    }
   }
+
+  .loading-dots span {
+    display: inline-block;
+    animation: loading-dots 1.2s infinite;
+    font-size: 1.5em;
+    line-height: 1;
+  }
+  
+  .loading-dots span:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes loading-dots {
+    0%, 20% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.3;
+    }
+  }
+  
   body {
     @apply bg-background text-foreground;
   }
