@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import Chat from '@/components/Chat';
-import Profiles from '@/components/Profiles';
+import React, { useState } from "react";
+import Chat from "@/components/Chat";
+import Profiles from "@/components/Profiles";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Message() {
@@ -12,6 +12,8 @@ function Message() {
   const handleProfileClick = (username: string) => {
     setSelectedUser(username);
     setIsChatVisible(true);
+    // Scroll to the top of the page
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (

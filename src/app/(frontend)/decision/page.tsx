@@ -13,6 +13,7 @@ const DecisionContent = () => {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (username) {
@@ -39,10 +40,12 @@ const DecisionContent = () => {
   }, [username]);
 
   const toOther = () => {
+    setIsLoading(true);
     router.push(`/profiles`);
   };
 
   const goToChat = () => {
+    setIsLoading(true);
     if (username && userProfile) {
       router.push(`/chat?username=${username}`);
     }
@@ -97,7 +100,11 @@ const DecisionContent = () => {
                   !userProfile ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                Chat with {userProfile ? userProfile.username : "Loading..."}
+               {isLoading ? (
+                <div className="w-5 h-5 border-t-2 border-stone-400 rounded-full animate-spin mx-auto" />
+              ) : (
+                `Chat with ${userProfile ? userProfile.username : "Loading..."}`
+              )}
               </motion.button>
             </div>
           </div>
@@ -137,7 +144,11 @@ const DecisionContent = () => {
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md shadow hover:bg-stone-600 drop-shadow-xl"
               >
-                Explore Profiles
+                  {isLoading ? (
+                <div className="w-5 h-5 border-t-2 border-stone-400 rounded-full animate-spin mx-auto" />
+              ) : (
+                `Explore Profiles`
+              )}
               </motion.button>
             </div>
           </div>

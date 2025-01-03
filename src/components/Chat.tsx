@@ -77,9 +77,13 @@ function Chat({ username }: ChatProps) {
 
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      const chatDiv = messagesEndRef.current.parentElement;
+      if (chatDiv) {
+        chatDiv.scrollTop = chatDiv.scrollHeight; // Scrolls the chat div to the bottom
+      }
     }
   }, [messages]);
+  
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,13 +93,12 @@ function Chat({ username }: ChatProps) {
       setMessage("");
   
       // Add a loading message for the bot's response
-      setMessages((prevMessages) => [...prevMessages, "Loading..."]);
+      setMessages((prevMessages) => [...prevMessages, "typing..."]);
   
       try {
-        // Fetch the bot's response
+
         const botReply = await fetchBotResponse(message, username);
   
-        // Replace the loading message with the actual bot response
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages];
           newMessages[newMessages.length - 1] = botReply; // Replace the last message
@@ -119,7 +122,7 @@ function Chat({ username }: ChatProps) {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-white">
       <div className="w-full max-w-2xl bg-black rounded-lg p-6 space-y-10 border border-stone-700">
         <h1 className="text-3xl font-light text-stone-200 text-center">
-          {userProfile ? `@${userProfile.username}` : "Loading..."}
+          {userProfile ? `@${userProfile.username}` : "typing..."}
         </h1>
 
         {userProfile && (
@@ -137,7 +140,7 @@ function Chat({ username }: ChatProps) {
           </div>
         )}
 
-<div className="h-[450px] overflow-auto bg-stone-950 p-4 rounded border border-stone-700 space-y-3">
+<div className="h-[450px] overflow-auto bg-stone-950 p-4 rounded border border-stone-700 space-y-3"  >
   {messages.map((msg, idx) => (
     <div
       key={idx}
@@ -162,7 +165,9 @@ function Chat({ username }: ChatProps) {
         }`}
       >
         {msg}
+        
       </div>
+     
       {idx % 2 === 0 && ( // User message
         <Image
           src={picture.src}  
@@ -171,10 +176,13 @@ function Chat({ username }: ChatProps) {
           height={40}
           className="w-8 h-8 rounded-full self-end"
         />
+        
       )}
     </div>
+    
   ))}
-  <div ref={messagesEndRef} />
+   <div ref={messagesEndRef} />
+ 
 </div>
 
 

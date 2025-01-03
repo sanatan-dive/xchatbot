@@ -10,7 +10,7 @@ export default {
   theme: {
   	extend: {
 		boxShadow: {
-			btn: "0px 0px 5px ",
+			btn: "12px ",
 		  },
   		colors: {
   			background: 'hsl(var(--background))',
