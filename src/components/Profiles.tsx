@@ -82,6 +82,7 @@ function Profiles({ onProfileClick }: ProfilesProps) {
                 className="p-4 bg-stone-800 rounded border border-stone-700 space-y-4"
               >
                 {profile.profileImageUrl ? (
+                  <a href= {`https://twitter.com/${profile.username}`} target="_blank">
                   <Image
                     src={profile.profileImageUrl}
                     alt={profile.username}
@@ -89,6 +90,7 @@ function Profiles({ onProfileClick }: ProfilesProps) {
                     height={64}
                     className="w-16 h-16 rounded-full mx-auto border border-stone-700"
                   />
+                  </a>
                 ) : (
                   <div className="w-16 h-16 rounded-full mx-auto bg-stone-700 flex items-center justify-center border border-stone-600">
                     <span className="text-2xl text-stone-400">
@@ -98,8 +100,11 @@ function Profiles({ onProfileClick }: ProfilesProps) {
                 )}
                 
                 <h2 className="text-lg font-light text-center text-stone-200">
+                <a href= {`https://twitter.com/${profile.username}`}  target="_blank">
                   @{profile.username}
+                  </a>
                 </h2>
+                 
                 
                 {(profile.followersCount !== undefined || profile.tweetCount !== undefined) && (
                   <div>
