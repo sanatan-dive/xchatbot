@@ -17,19 +17,27 @@ function Message() {
   };
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full flex  justify-center">
       {/* Desktop Layout */}
-      <div className="hidden md:grid md:grid-cols-2 w-full">
-        <div className="col-span-1">
+      <div className="hidden md:flex w-full max-w-4xl relative">
+        {/* Profiles Section */}
+        <motion.div
+          className={`absolute top-0 left-0 h-full w-full` }
+          initial={{ x: 0 }}
+          animate={{ x: isChatVisible ? "-50%" : "0%" }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
           <Profiles onProfileClick={handleProfileClick} />
-        </div>
+        </motion.div>
+
+        {/* Chat Section */}
         <AnimatePresence>
           {isChatVisible && (
             <motion.div
-              className="col-span-1"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 100 }}
+              className="absolute top-0 right-0 h-full max-w-4xl w-full"
+              initial={{ x: "1000px" }}
+              animate={{ x: "500px" }}
+              exit={{ x: "100%" }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
               {selectedUser && <Chat username={selectedUser} />}
@@ -55,7 +63,7 @@ function Message() {
           )}
         </AnimatePresence>
 
-        {/* Profiles Section - Always visible */}
+        {/* Profiles Section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
