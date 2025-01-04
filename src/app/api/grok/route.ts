@@ -1,8 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
+
+// Initialize API key rotation
+const GEMINI_API_KEYS = [
+  process.env.GEMINI_API_KEY_1 || '',
+  process.env.GEMINI_API_KEY_2 || '',
+  process.env.GEMINI_API_KEY_3 || '',
+  process.env.GEMINI_API_KEY_4 || '',
+].filter(key => key !== '');
+
+let currentKeyIndex = 0;
+const keyUsageCount: { [key: string]: number } = {};
+const MAX_REQUESTS_PER_KEY = 60; // Adjust based on your rate limit
+
+// Function to get next available API key
+function getNextApiKey(): string {
+  const currentKey = GEMINI_API_KEYS[currentKeyIndex];
+  
+  // Initialize usage count if not exists
+  if (!keyUsageCount[currentKey]) {
+    keyUsageCount[currentKey] = 0;
+  }
+  
+  // Check if current key is exhausted
+  if (keyUsageCount[currentKey] >= MAX_REQUESTS_PER_KEY) {
+    // Move to next key
+    currentKeyIndex = (currentKeyIndex + 1) % GEMINI_API_KEYS.length;
+    
+    // Reset usage count for the new key
+    const newKey = GEMINI_API_KEYS[currentKeyIndex];
+    keyUsageCount[newKey] = 0;
+    
+    return newKey;
+  }
+  
+  // Increment usage count and return current key
+  keyUsageCount[currentKey]++;
+  return currentKey;
+}
+
+
 // Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const apiKey = getNextApiKey();
+const genAI = new GoogleGenerativeAI(apiKey);
 const rapidAPIKey = process.env.RAPIDAPI_KEY;
 
 // Types for better type safety
