@@ -14,6 +14,7 @@ const DecisionContent = () => {
   const username = searchParams.get("username");
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isAlsoLoading, setIsAlsoLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (username) {
@@ -40,7 +41,7 @@ const DecisionContent = () => {
   }, [username]);
 
   const toOther = () => {
-    setIsLoading(true);
+    setIsAlsoLoading(true);
     router.push(`/profiles`);
   };
 
@@ -144,7 +145,7 @@ const DecisionContent = () => {
                 whileTap={{ scale: 0.95 }}
                 className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-md shadow hover:bg-stone-600 drop-shadow-xl"
               >
-                  {isLoading ? (
+                  {isAlsoLoading ? (
                 <div className="w-5 h-5 border-t-2 border-stone-400 rounded-full animate-spin mx-auto" />
               ) : (
                 `Explore Profiles`

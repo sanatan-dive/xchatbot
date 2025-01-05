@@ -27,7 +27,7 @@ const fetchBotResponse = async (message: string, username: string | null) => {
   
   catch (error) {
     console.error("Error fetching bot response:", error);
-    return "Sorry, there was an error.";
+    return "Nah man i ain't got nothin.";
   }
 };
 
@@ -93,7 +93,7 @@ function Chat({ username }: ChatProps) {
       setMessage("");
   
       // Add a loading message for the bot's response
-      setMessages((prevMessages) => [...prevMessages, "typing..."]);
+      setMessages((prevMessages) => [...prevMessages, "Typing..."]);
   
       try {
 
@@ -110,7 +110,7 @@ function Chat({ username }: ChatProps) {
         // Replace the loading message with an error message if something goes wrong
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages];
-          newMessages[newMessages.length - 1] = "Sorry, there was an error.";
+          newMessages[newMessages.length - 1] = "Nah man, i ain't got nothin";
           return newMessages;
         });
       }
@@ -122,7 +122,7 @@ function Chat({ username }: ChatProps) {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-white">
       <div className="w-full max-w-2xl bg-black rounded-lg p-6 space-y-10 border border-stone-700">
         <h1 className="text-3xl font-light text-stone-200 text-center">
-          {userProfile ? `@${userProfile.username}` : "typing..."}
+          {userProfile ? `@${userProfile.username}` : "Typing..."}
         </h1>
 
         {userProfile && (
