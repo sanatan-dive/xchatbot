@@ -10,9 +10,17 @@ const GEMINI_API_KEYS = [
   process.env.GEMINI_API_KEY_4 || '',
 ].filter(key => key !== '');
 
+const RAPIDAPI_KEYS = [
+  process.env.RAPIDAPI_KEY_1 || '',
+  process.env.RAPIDAPI_KEY_2 || '',
+  process.env.RAPIDAPI_KEY_3 || '', 
+]
+
+let rapidKeyIndex = 0
 let currentKeyIndex = 0;
 const keyUsageCount: { [key: string]: number } = {};
-const MAX_REQUESTS_PER_KEY = 60; // Adjust based on your rate limit
+const rapidKeyUsageCount: { [key: string]: number } = {};
+const MAX_REQUESTS_PER_KEY = 100; // Adjust based on your rate limit
 
 // Function to get next available API key
 function getNextApiKey(): string {
@@ -40,11 +48,25 @@ function getNextApiKey(): string {
   return currentKey;
 }
 
+function getNextRapidKey(): string {
+  const currentKey = RAPIDAPI_KEYS[rapidKeyIndex];
+  if (!rapidKeyUsageCount[currentKey]) rapidKeyUsageCount[currentKey] = 0;
+
+  if (rapidKeyUsageCount[currentKey] >= MAX_REQUESTS_PER_KEY) {
+    rapidKeyIndex = (rapidKeyIndex + 1) % RAPIDAPI_KEYS.length;
+    const newKey = RAPIDAPI_KEYS[rapidKeyIndex];
+    rapidKeyUsageCount[newKey] = 0;
+    return newKey;
+  }
+
+  rapidKeyUsageCount[currentKey]++;
+  return currentKey;
+}
 
 // Initialize Gemini client
 const apiKey = getNextApiKey();
 const genAI = new GoogleGenerativeAI(apiKey);
-const rapidAPIKey = process.env.RAPIDAPI_KEY;
+const rapidAPIKey = getNextRapidKey();
 
 // Types for better type safety
 interface Tweet {
