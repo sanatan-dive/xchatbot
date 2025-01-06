@@ -1,5 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Track API key usage and errors
+interface KeyMetrics {
+  usageCount: number;
+  errorCount: number;
+  lastUsed: number;
+  isRateLimited: boolean;
+}
+
+const keyMetrics: { [key: string]: KeyMetrics } = {};
+const RATE_LIMIT_RESET_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+// Helper function to get the next available API key
+function getNextViableKey(keys: string[]): string | null {
+  const now = Date.now();
+  
+  // Reset metrics for keys that have passed the rate limit window
+  keys.forEach(key => {
+    if (keyMetrics[key]?.isRateLimited && 
+        now - keyMetrics[key].lastUsed >= RATE_LIMIT_RESET_TIME) {
+      keyMetrics[key].isRateLimited = false;
+      keyMetrics[key].errorCount = 0;
+      keyMetrics[key].usageCount = 0;
+    }
+  });
+
+  // Find the first non-rate-limited key
+  return keys.find(key => !keyMetrics[key]?.isRateLimited) || null;
+}
+
+// Initialize or update key metrics
+function initializeKeyMetrics(key: string) {
+  if (!keyMetrics[key]) {
+    keyMetrics[key] = {
+      usageCount: 0,
+      errorCount: 0,
+      lastUsed: Date.now(),
+      isRateLimited: false
+    };
+  }
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const username = url.searchParams.get("username");
@@ -14,38 +55,61 @@ export async function GET(request: NextRequest) {
       process.env.RAPIDAPI_KEY_1,
       process.env.RAPIDAPI_KEY_2,
       process.env.RAPIDAPI_KEY_3,
-    ].filter((key): key is string => Boolean(key)); // Ensure no undefined or empty keys
+    ].filter((key): key is string => Boolean(key));
 
     if (rapidApiKeys.length === 0) {
       return new NextResponse("No valid RapidAPI keys found", { status: 500 });
     }
 
     let lastError: any = null;
+    let attempts = 0;
+    const maxAttempts = rapidApiKeys.length * 2; // Allow each key to be tried twice
 
-    for (const rapidApiKey of rapidApiKeys) {
+    while (attempts < maxAttempts) {
+      const currentKey = getNextViableKey(rapidApiKeys);
+      
+      if (!currentKey) {
+        if (lastError?.status === 429) {
+          return new NextResponse("All API keys are rate limited. Please try again later.", 
+            { status: 429 });
+        }
+        break;
+      }
+
       try {
-        // Fetch user data from the RapidAPI endpoint
+        initializeKeyMetrics(currentKey);
+        keyMetrics[currentKey].usageCount++;
+        keyMetrics[currentKey].lastUsed = Date.now();
+
         const response = await fetch(
           `https://twitter-api45.p.rapidapi.com/screenname.php?screenname=${username}`,
           {
             method: "GET",
             headers: {
               "x-rapidapi-host": "twitter-api45.p.rapidapi.com",
-              "x-rapidapi-key": rapidApiKey, // Valid string ensured by filter
-            } as HeadersInit, // Explicitly cast to HeadersInit
+              "x-rapidapi-key": currentKey,
+            } as HeadersInit,
           }
         );
 
-        if (response.ok) {
-          // Parse the JSON response from RapidAPI
-          const jsonResponse = await response.json();
+        // Handle rate limiting
+        if (response.status === 429) {
+          keyMetrics[currentKey].isRateLimited = true;
+          keyMetrics[currentKey].errorCount++;
+          lastError = { status: 429, message: "Rate limited" };
+          attempts++;
+          continue;
+        }
 
+        // Handle successful response
+        if (response.ok) {
+          const jsonResponse = await response.json();
+          
           if (jsonResponse.status !== "active") {
             return new NextResponse("User not found or inactive", { status: 404 });
           }
 
           const userImage = jsonResponse.avatar.replace("_normal", "_200x200");
-
           const userData = {
             name: jsonResponse.name,
             username: jsonResponse.profile,
@@ -67,17 +131,25 @@ export async function GET(request: NextRequest) {
             headers: { "Content-Type": "application/json" },
           });
         } else {
-          console.error(`Key failed: ${rapidApiKey}, Status: ${response.status}`);
+          keyMetrics[currentKey].errorCount++;
           lastError = `Error fetching Twitter data: ${response.statusText}`;
+          console.error(`Key ${currentKey} failed: Status ${response.status}`);
         }
       } catch (error: any) {
-        console.error(`Error with key ${rapidApiKey}:`, error.message || error);
+        keyMetrics[currentKey].errorCount++;
+        console.error(`Error with key ${currentKey}:`, error.message || error);
         lastError = error;
       }
+
+      attempts++;
     }
 
-    // If all keys fail, return the last error
-    return new NextResponse(lastError || "Error fetching Twitter data", { status: 500 });
+    // If all attempts fail, return the last error
+    return new NextResponse(
+      lastError?.message || lastError || "Error fetching Twitter data", 
+      { status: lastError?.status || 500 }
+    );
+
   } catch (error: any) {
     console.error("Unexpected error occurred:", error.message || error);
     return new NextResponse("Error fetching Twitter data", { status: 500 });

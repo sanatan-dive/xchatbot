@@ -20,53 +20,119 @@ let rapidKeyIndex = 0
 let currentKeyIndex = 0;
 const keyUsageCount: { [key: string]: number } = {};
 const rapidKeyUsageCount: { [key: string]: number } = {};
-const MAX_REQUESTS_PER_KEY = 20; // Adjust based on your rate limit
+const keyErrorCount: { [key: string]: number } = {};
+const rapidKeyErrorCount: { [key: string]: number } = {};
 
+const MAX_REQUESTS_PER_KEY = 20;
+const MAX_ERRORS_BEFORE_ROTATION = 3;
 // Function to get next available API key
-function getNextApiKey(): string {
-  const currentKey = GEMINI_API_KEYS[currentKeyIndex];
-  
-  // Initialize usage count if not exists
-  if (!keyUsageCount[currentKey]) {
-    keyUsageCount[currentKey] = 0;
-  }
-  
-  // Check if current key is exhausted
-  if (keyUsageCount[currentKey] >= MAX_REQUESTS_PER_KEY) {
-    // Move to next key
-    currentKeyIndex = (currentKeyIndex + 1) % GEMINI_API_KEYS.length;
+async function getNextApiKey(): Promise<string> {
+  const startingIndex = currentKeyIndex;
+  let attempts = 0;
+
+  while (attempts < GEMINI_API_KEYS.length) {
+    const currentKey = GEMINI_API_KEYS[currentKeyIndex];
     
-    // Reset usage count for the new key
-    const newKey = GEMINI_API_KEYS[currentKeyIndex];
-    keyUsageCount[newKey] = 0;
-    
-    return newKey;
+    // Check if key has too many errors or exceeded usage
+    if (
+      (keyErrorCount[currentKey] || 0) >= MAX_ERRORS_BEFORE_ROTATION ||
+      (keyUsageCount[currentKey] || 0) >= MAX_REQUESTS_PER_KEY
+    ) {
+      // Rotate to next key
+      currentKeyIndex = (currentKeyIndex + 1) % GEMINI_API_KEYS.length;
+      if (currentKeyIndex === startingIndex) {
+        throw new Error('All API keys are exhausted or erroring');
+      }
+      attempts++;
+      continue;
+    }
+
+    // Initialize counters if needed
+    if (!keyUsageCount[currentKey]) keyUsageCount[currentKey] = 0;
+    if (!keyErrorCount[currentKey]) keyErrorCount[currentKey] = 0;
+
+    keyUsageCount[currentKey]++;
+    return currentKey;
   }
-  
-  // Increment usage count and return current key
-  keyUsageCount[currentKey]++;
-  return currentKey;
+
+  throw new Error('No valid API keys available');
 }
 
-function getNextRapidKey(): string {
-  const currentKey = RAPIDAPI_KEYS[rapidKeyIndex];
-  if (!rapidKeyUsageCount[currentKey]) rapidKeyUsageCount[currentKey] = 0;
+async function getNextRapidKey(): Promise<string> {
+  const startingIndex = rapidKeyIndex;
+  let attempts = 0;
 
-  if (rapidKeyUsageCount[currentKey] >= MAX_REQUESTS_PER_KEY) {
-    rapidKeyIndex = (rapidKeyIndex + 1) % RAPIDAPI_KEYS.length;
-    const newKey = RAPIDAPI_KEYS[rapidKeyIndex];
-    rapidKeyUsageCount[newKey] = 0;
-    return newKey;
+  while (attempts < RAPIDAPI_KEYS.length) {
+    const currentKey = RAPIDAPI_KEYS[rapidKeyIndex];
+    
+    if (
+      (rapidKeyErrorCount[currentKey] || 0) >= MAX_ERRORS_BEFORE_ROTATION ||
+      (rapidKeyUsageCount[currentKey] || 0) >= MAX_REQUESTS_PER_KEY
+    ) {
+      rapidKeyIndex = (rapidKeyIndex + 1) % RAPIDAPI_KEYS.length;
+      if (rapidKeyIndex === startingIndex) {
+        throw new Error('All RapidAPI keys are exhausted or erroring');
+      }
+      attempts++;
+      continue;
+    }
+
+    if (!rapidKeyUsageCount[currentKey]) rapidKeyUsageCount[currentKey] = 0;
+    if (!rapidKeyErrorCount[currentKey]) rapidKeyErrorCount[currentKey] = 0;
+
+    rapidKeyUsageCount[currentKey]++;
+    return currentKey;
   }
 
-  rapidKeyUsageCount[currentKey]++;
-  return currentKey;
+  throw new Error('No valid RapidAPI keys available');
+}
+
+async function fetchWithKeyRotation(url: string, options: RequestInit, isRapidApi: boolean = false): Promise<Response> {
+  let response: Response;
+  let currentAttempt = 0;
+  const maxAttempts = isRapidApi ? RAPIDAPI_KEYS.length : GEMINI_API_KEYS.length;
+
+  while (currentAttempt < maxAttempts) {
+    try {
+      const key = isRapidApi ? await getNextRapidKey() : await getNextApiKey();
+      
+      // Update headers with new key
+      const headers = new Headers(options.headers);
+      if (isRapidApi) {
+        headers.set('x-rapidapi-key', key);
+      } else {
+        // Update for Gemini API if needed
+      }
+
+      response = await fetch(url, { ...options, headers });
+
+      // Handle rate limiting
+      if (response.status === 429) {
+        if (isRapidApi) {
+          rapidKeyErrorCount[key] = (rapidKeyErrorCount[key] || 0) + 1;
+        } else {
+          keyErrorCount[key] = (keyErrorCount[key] || 0) + 1;
+        }
+        currentAttempt++;
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      currentAttempt++;
+      if (currentAttempt === maxAttempts) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('All API keys exhausted');
 }
 
 // Initialize Gemini client
-const apiKey = getNextApiKey();
+const apiKey = await getNextApiKey();
 const genAI = new GoogleGenerativeAI(apiKey);
-const rapidAPIKey = getNextRapidKey();
+
 
 
 
@@ -159,7 +225,7 @@ async function fetchUserData(username: string): Promise<UserData> {
       method: "GET",
       headers: {
         "x-rapidapi-host": "twitter-api45.p.rapidapi.com",
-        "x-rapidapi-key": rapidAPIKey || '',
+        "x-rapidapi-key": await getNextRapidKey(),
       },
     }
   );
@@ -188,15 +254,16 @@ async function fetchUserData(username: string): Promise<UserData> {
 }
 
 async function fetchTweets(username: string): Promise<string[]> {
-  const response = await fetch(
+  const response = await fetchWithKeyRotation(
     `https://twitter-x.p.rapidapi.com/user/tweets?username=${encodeURIComponent(username)}&limit=100`,
     {
       method: 'GET',
       headers: {
         'x-rapidapi-host': 'twitter-x.p.rapidapi.com',
-        'x-rapidapi-key': rapidAPIKey || '',
+        'x-rapidapi-key': await getNextRapidKey(),
       },
-    }
+    },
+    true
   );
 
  
