@@ -13,7 +13,7 @@ const fetchBotResponse = async (message: string, username: string | null) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message, username }), // Send the user's message and username
+      body: JSON.stringify({ message, username }), 
     });
 
     if (!response.ok) {
