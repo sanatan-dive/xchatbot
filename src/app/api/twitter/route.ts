@@ -9,7 +9,7 @@ interface KeyMetrics {
 }
 
 const keyMetrics: { [key: string]: KeyMetrics } = {};
-const RATE_LIMIT_RESET_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+const RATE_LIMIT_RESET_TIME = 15 * 60 * 1000; 
 
 // Helper function to get the next available API key
 function getNextViableKey(keys: string[]): string | null {
