@@ -38,9 +38,10 @@ function Profiles({ onProfileClick }: ProfilesProps) {
         const fetchedProfiles: Profile[] = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...(doc.data() as ProfileDocData),
+          createdAt: doc.data().createdAt.toDate(),
         }));
         const sortedProfiles = fetchedProfiles.sort(
-          (a, b) => (b.followersCount ?? 0) - (a.followersCount ?? 0)
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
         );
         setProfiles(sortedProfiles);
         setFilteredProfiles(sortedProfiles);
