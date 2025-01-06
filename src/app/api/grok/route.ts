@@ -23,7 +23,7 @@ const rapidKeyUsageCount: { [key: string]: number } = {};
 const keyErrorCount: { [key: string]: number } = {};
 const rapidKeyErrorCount: { [key: string]: number } = {};
 
-const MAX_REQUESTS_PER_KEY = 50;
+const MAX_REQUESTS_PER_KEY = 1000;
 const MAX_ERRORS_BEFORE_ROTATION = 1;
 // Function to get next available API key
 async function getNextApiKey(): Promise<string> {
