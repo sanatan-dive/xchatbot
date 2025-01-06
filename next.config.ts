@@ -4,7 +4,8 @@ import type { NextConfig } from "next";
 
 const nextConfig = {
   images: {
-    domains: ['pbs.twimg.com'], // Add the Twitter image domain here
+    domains: ['pbs.twimg.com','abs.twimg.com'], 
+    
   },
 };
 

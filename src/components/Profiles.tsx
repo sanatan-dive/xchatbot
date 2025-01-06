@@ -39,7 +39,10 @@ function Profiles({ onProfileClick }: ProfilesProps) {
           id: doc.id,
           ...(doc.data() as ProfileDocData),
         }));
-        setProfiles(fetchedProfiles);
+        const sortedProfiles = fetchedProfiles.sort(
+          (a, b) => (b.followersCount ?? 0) - (a.followersCount ?? 0)
+        );
+        
         setFilteredProfiles(fetchedProfiles);
       } catch (error) {
         console.error("Error fetching profiles:", error);
