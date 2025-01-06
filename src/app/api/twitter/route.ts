@@ -67,7 +67,6 @@ export async function GET(request: NextRequest) {
             headers: { "Content-Type": "application/json" },
           });
         } else {
-          // Log the failure and move to the next key
           console.error(`Key failed: ${rapidApiKey}, Status: ${response.status}`);
           lastError = `Error fetching Twitter data: ${response.statusText}`;
         }
