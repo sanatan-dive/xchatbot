@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate persona response
+  
     const response = await generatePersonaResponse(tweets, message, userData);
     return NextResponse.json({ message: response });
   } catch (error) {
