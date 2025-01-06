@@ -20,7 +20,7 @@ let rapidKeyIndex = 0
 let currentKeyIndex = 0;
 const keyUsageCount: { [key: string]: number } = {};
 const rapidKeyUsageCount: { [key: string]: number } = {};
-const MAX_REQUESTS_PER_KEY = 100; // Adjust based on your rate limit
+const MAX_REQUESTS_PER_KEY = 60; // Adjust based on your rate limit
 
 // Function to get next available API key
 function getNextApiKey(): string {
@@ -67,6 +67,8 @@ function getNextRapidKey(): string {
 const apiKey = getNextApiKey();
 const genAI = new GoogleGenerativeAI(apiKey);
 const rapidAPIKey = getNextRapidKey();
+
+
 
 // Types for better type safety
 interface Tweet {
