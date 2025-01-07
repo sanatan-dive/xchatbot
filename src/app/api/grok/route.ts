@@ -25,7 +25,6 @@ const rapidKeyErrorCount: { [key: string]: number } = {};
 
 const MAX_REQUESTS_PER_KEY = 1000;
 const MAX_ERRORS_BEFORE_ROTATION = 1;
-// Function to get next available API key
 async function getNextApiKey(): Promise<string> {
   const startingIndex = currentKeyIndex;
   let attempts = 0;
