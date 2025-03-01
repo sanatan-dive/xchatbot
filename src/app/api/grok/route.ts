@@ -326,7 +326,7 @@ Response guidelines:
 
 Important: Provide ONLY the response message, with very less explanations and no meta-commentary.`;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     const chat = model.startChat({
       generationConfig: {
         maxOutputTokens: 100, // Short responses
