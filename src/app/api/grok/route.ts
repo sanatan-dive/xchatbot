@@ -169,10 +169,10 @@ async function fetchTweets(username: string): Promise<string[]> {
   }
 
   const data = await response.json();
-  console.log("Data:", data);
+  // console.log("Data:", data);
 
   const instructions = data?.data?.user_result?.result?.timeline_response?.timeline?.instructions || [];
-  console.log("Instructions:", instructions);
+  // console.log("Instructions:", instructions);
 
   // Extract entries from both TimelinePinEntry and TimelineAddEntries
   const entries = instructions.flatMap((inst: any) => {
@@ -183,7 +183,7 @@ async function fetchTweets(username: string): Promise<string[]> {
     }
     return [];
   });
-  console.log("Entries:", entries);
+  // console.log("Entries:", entries);
 
   // Extract tweet text from entries
   const tweets = entries
@@ -216,7 +216,7 @@ async function fetchTweets(username: string): Promise<string[]> {
     })
     .filter((text: string | undefined): text is string => typeof text === 'string');
 
-  console.log("Tweets:", tweets);
+  // console.log("Tweets:", tweets);
   return tweets;
 }
 
@@ -256,7 +256,7 @@ Response guidelines:
 8. Use a conversational tone
 9. use special characters if you think it is appropriate`;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const chat = model.startChat({
       generationConfig: {
         maxOutputTokens: 100,
